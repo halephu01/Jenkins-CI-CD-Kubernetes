@@ -15,12 +15,17 @@ spec:
       labels:
         app: friend-service
     spec:
+      initContainers:
+      - name: wait-for-rabbitmq
+        image: busybox
+        command: ['sh', '-c', 'until nc -z rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done;']
       containers:
       - name: friend-service
         image: halephu01/friend-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 6060
+          name: http
         resources:
           requests:
             memory: "256Mi"
@@ -29,20 +34,22 @@ spec:
             memory: "512Mi"
             cpu: "500m"
         readinessProbe:
-          tcpSocket:
-            port: 6060
-          initialDelaySeconds: 5
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 60
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 5
         livenessProbe:
-          tcpSocket:
-            port: 6060
-          initialDelaySeconds: 15
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 75
           periodSeconds: 20
+          timeoutSeconds: 3
+          failureThreshold: 3
         env:
-        - name: GRPC_PORT
-          value: "6060"
-        - name: GRPC_HOST
-          value: "0.0.0.0"
         - name: APP_ENV
           valueFrom:
             configMapKeyRef:
@@ -53,4 +60,22 @@ spec:
             configMapKeyRef:
               name: microservices-config
               key: LOG_LEVEL
+        - name: SPRING_PROFILES_ACTIVE
+          value: "development"
+        - name: JAVA_OPTS
+          value: "-Xmx256m -Xms128m -Dserver.port=6060"
+        - name: RABBITMQ_URL
+          value: "amqp://guest:guest@rabbitmq:5672"
+        - name: RABBITMQ_QUEUE
+          value: "friend-service"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "guest"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "guest"
+        - name: SERVER_PORT
+          value: "6060"
           

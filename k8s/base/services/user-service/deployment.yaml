@@ -15,12 +15,17 @@ spec:
       labels:
         app: user-service
     spec:
+      initContainers:
+      - name: wait-for-rabbitmq
+        image: busybox
+        command: ['sh', '-c', 'until nc -z rabbitmq 5672; do echo waiting for rabbitmq; sleep 2; done;']
       containers:
       - name: user-service
         image: halephu01/user-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4040
+          name: http
         resources:
           requests:
             memory: "256Mi"
@@ -29,14 +34,16 @@ spec:
             memory: "512Mi"
             cpu: "500m"
         readinessProbe:
-          tcpSocket:
-            port: 4040
-          initialDelaySeconds: 5
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 60
           periodSeconds: 10
         livenessProbe:
-          tcpSocket:
-            port: 4040
-          initialDelaySeconds: 15
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 75
           periodSeconds: 20
         env:
         - name: GRPC_PORT
@@ -53,4 +60,32 @@ spec:
             configMapKeyRef:
               name: microservices-config
               key: LOG_LEVEL
+        - name: RABBITMQ_URL
+          value: "amqp://guest:guest@rabbitmq:5672"
+        - name: RABBITMQ_QUEUE
+          value: "user-service"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq.microservices.svc.cluster.local"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "guest"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "guest"
+        - name: SPRING_RABBITMQ_VIRTUAL_HOST
+          value: "/"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "development"
+        - name: JAVA_OPTS
+          value: "-Xmx256m -Xms128m"
+        - name: SERVER_PORT
+          value: "4040"
+        - name: SPRING_SERVER_PORT
+          value: "4040"
+        - name: MANAGEMENT_SERVER_PORT
+          value: "4040"
+        - name: MANAGEMENT_ENDPOINTS_WEB_BASE_PATH
+          value: "/actuator"
+        - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+          value: "*"
           

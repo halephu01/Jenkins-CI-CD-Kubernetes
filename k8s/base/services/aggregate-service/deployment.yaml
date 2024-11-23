@@ -45,10 +45,14 @@ spec:
           value: "5050"
         - name: SERVER_HOST
           value: "0.0.0.0"
-        - name: PRODUCT_SERVICE_URL
+        - name: USER_SERVICE
           value: "http://user-service:4040"
-        - name: ORDER_SERVICE_URL
+        - name: FRIEND_USER
           value: "http://friend-service:6060"
+        - name: RABBITMQ_URL
+          value: "amqp://guest:guest@rabbitmq:5672"
+        - name: RABBITMQ_QUEUE
+          value: "aggregate-service"
         - name: APP_ENV
           valueFrom:
             configMapKeyRef:
@@ -59,3 +63,54 @@ spec:
             configMapKeyRef:
               name: microservices-config
               key: LOG_LEVEL
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "guest"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "guest"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - name: rabbitmq
+        image: docker.io/library/rabbitmq:3.12-management
+        ports:
+        - containerPort: 5672  
+        - containerPort: 15672  
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: "guest"
+        - name: RABBITMQ_DEFAULT_PASS
+          value: "guest"  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: microservices
+spec:
+  ports:
+  - name: rabbitmq-port  
+    port: 5672
+    targetPort: 5672
+  - name: rabbitmq-management-port
+    port: 15672
+    targetPort: 15672
+  selector:
+    app: rabbitmq

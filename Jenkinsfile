@@ -1,162 +1,124 @@
 pipeline {
+    environment {
+        DOCKER_REGISTRY = "tuilakhanh"
+        BUILD_TAG = "v${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
+        DOCKER_CREDENTIALS_ID = 'dockercerd'
+        KUBE_CONFIG_ID = 'k8s-config'
+        KUBE_CLUSTER_NAME = 'minikube'
+        KUBE_CONTEXT_NAME = 'minikube'
+        KUBE_SERVER_URL = 'https://192.168.49.2:8443'
+        REPORT_DIR = 'reports'
+        SONAR_PROJECT_BASE_DIR = '.'
+        SONAR_SCANNER_OPTS = '-Xmx2048m'
+    }
+    
     agent any
     
-    environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        
-        USER_SERVICE_IMAGE = 'halephu01/user-service'
-        FRIEND_SERVICE_IMAGE = 'halephu01/friend-service'
-        AGGREGATE_SERVICE_IMAGE = 'halephu01/aggregate-service'
-        
-        VERSION = "${BUILD_NUMBER}"
-        
-        SONAR_TOKEN = credentials('sonar')
-        SONAR_PROJECT_KEY = 'microservices-project'
-    }
-    
-    tools {
-        maven 'Maven 3.8.6'
-        jdk 'JDK 11'
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/halephu01/Jenkins-CI-CD.git',
-                    credentialsId: 'github-credentials'
-            }
-        }
-
-        stage('Build Services') {
-            parallel {
-                stage('Build User Service') {
-                    steps {
-                        dir('user-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
-                
-                stage('Build Friend Service') {
-                    steps {
-                        dir('friend-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
-                
-                stage('Build Aggregate Service') {
-                    steps {
-                        dir('aggregate-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
+                script {
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
-
+        
+        stage('Test') {
+            steps {
+                script {
+                    sh 'mvn test clean'
+                }
+            }
+        }
+        
         stage('SonarQube Analysis') {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    def services = ['user-service', 'friend-service', 'aggregate-service']
-
-                    withSonarQubeEnv('SonarScanner') {
-                        services.each { service ->
-                            dir(service) {
-                                sh """
-                                    ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${service} \
-                                    -Dsonar.projectName=${service} \
-                                    -Dsonar.sources=. \
-                                    -Dsonar.java.binaries=target/classes \
-                                """
-                            }
+                    withSonarQubeEnv('sq1') {
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=${env.JOB_NAME} \
+                            -Dsonar.projectName=${env.JOB_NAME} \
+                            -Dsonar.sources=. \
+                            -Dsonar.java.binaries=target/classes \
+                            -Dsonar.qualitygate.wait=false
+                        """
+                    }
+                    
+                    timeout(time: 5, unit: 'MINUTES') {
+                        def qg = waitForQualityGate projectKey: env.JOB_NAME
+                        if (qg.status != 'OK') {
+                            error "Quality gate failed: ${qg.status}"
                         }
+                        echo "Quality gate passed"
                     }
                 }
             }
         }
         
-        stage('Login to DockerHub') {
-            steps {
-                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-            }
-        }
-
-        stage('Push Docker Images') {
+        stage('Build and Push Docker Image') {
             steps {
                 script {
-                    sh """
-                        if docker image inspect halephu01/user-service:${BUILD_NUMBER} >/dev/null 2>&1; then
-                            echo "Pushing user-service image..."
-                            docker push halephu01/user-service:${BUILD_NUMBER}
-                        else
-                            echo "user-service image not found!"
-                            exit 1
-                        fi
-
-                        if docker image inspect halephu01/friend-service:${BUILD_NUMBER} >/dev/null 2>&1; then
-                            echo "Pushing friend-service image..."
-                            docker push halephu01/friend-service:${BUILD_NUMBER}
-                        else
-                            echo "friend-service image not found!"
-                            exit 1
-                        fi
-
-                        if docker image inspect halephu01/aggregate-service:${BUILD_NUMBER} >/dev/null 2>&1; then
-                            echo "Pushing aggregate-service image..."
-                            docker push halephu01/aggregate-service:${BUILD_NUMBER}
-                        else
-                            echo "aggregate-service image not found!"
-                            exit 1
-                        fi
-                    """
+                    docker.withRegistry("", DOCKER_CREDENTIALS_ID) {
+                        def serviceImage = docker.build("${DOCKER_REGISTRY}/spring-boot-app:${BUILD_TAG}")
+                        serviceImage.push()
+                        serviceImage.push('latest')
+                    }
                 }
             }
         }
-
+        
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    sh """
-                        kubectl set image deployment/user-service user-service=${USER_SERVICE_IMAGE}:${VERSION} --record
-                        kubectl set image deployment/friend-service friend-service=${FRIEND_SERVICE_IMAGE}:${VERSION} --record
-                        kubectl set image deployment/aggregate-service aggregate-service=${AGGREGATE_SERVICE_IMAGE}:${VERSION} --record
-                    """
+                    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {
+                        sh """
+                            kubectl apply -f k8s/base/namespace.yml || true
+                            kubectl apply -f k8s/base/config.yaml || true
+                            kubectl apply -f k8s/base/services.yaml || true
+                            
+                            kubectl set image deployment/spring-boot-app spring-boot-app=${DOCKER_REGISTRY}/spring-boot-app:${BUILD_TAG}
+                            
+                            kubectl rollout status deployment/spring-boot-app
+                        """
+                    }
                 }
             }
         }
+        
+        stage('Verify Deployments') {
+            steps {
+                verifyDeployments()
+            }
+        }
     }
-
+    
     post {
+        always {
+            cleanWs()
+        }
         success {
-            echo 'Pipeline executed successfully!'
+            echo "Pipeline completed successfully!"
         }
         failure {
-            echo 'Pipeline execution failed!'
-        }
-        always { 
-            script {
-                try {
-                    sh """
-                        docker-compose down || true
-                        docker logout
-                        
-                        # Remove images
-                        for service in ${env.DOCKER_IMAGES}; do
-                            image="halephu01/\${service}:${BUILD_NUMBER}"
-                            if docker image inspect \${image} >/dev/null 2>&1; then
-                                echo "Removing image \${image}..."
-                                docker rmi \${image} || true
-                            fi
-                        done
-                    """
-                } catch (Exception e) {
-                    echo "Cleanup failed: ${e.message}"
-                }
-            }
+            echo "Pipeline failed!"
         }
     }
-} 
+}
+
+// Helper functions
+def verifyDeployments() {
+    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {
+        sh '''
+            echo "Services Status:"
+            kubectl get svc -n microservices
+            
+            echo "\nPods Status:"
+            kubectl get pods -n microservices
+            
+            echo "\nDeployments Status:"
+            kubectl get deployments -n microservices
+        '''
+    }
+}
