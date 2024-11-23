@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: friend-service
+  namespace: microservices
+  labels:
+    app: friend-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: friend-service
+  template:
+    metadata:
+      labels:
+        app: friend-service
+    spec:
+      containers:
+      - name: friend-service
+        image: halephu01/friend-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 6060
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          tcpSocket:
+            port: 6060
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 6060
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        env:
+        - name: GRPC_PORT
+          value: "6060"
+        - name: GRPC_HOST
+          value: "0.0.0.0"
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: microservices-config
+              key: ENVIRONMENT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: microservices-config
+              key: LOG_LEVEL
+          

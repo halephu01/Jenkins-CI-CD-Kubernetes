@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aggregate-service
+  namespace: microservices
+  labels:
+    app: aggregate-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aggregate-service
+  template:
+    metadata:
+      labels:
+        app: aggregate-service
+    spec:
+      containers:
+      - name: aggregate-service
+        image: halephu01/aggregate-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5050
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5050
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5050
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        env:
+        - name: SERVER_PORT
+          value: "5050"
+        - name: SERVER_HOST
+          value: "0.0.0.0"
+        - name: PRODUCT_SERVICE_URL
+          value: "http://user-service:4040"
+        - name: ORDER_SERVICE_URL
+          value: "http://friend-service:6060"
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: microservices-config
+              key: ENVIRONMENT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: microservices-config
+              key: LOG_LEVEL

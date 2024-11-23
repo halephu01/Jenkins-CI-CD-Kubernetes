@@ -1,67 +1,51 @@
-# MICROservices PROJECT
+# Introduction to Event Sourcing in Microservices
 
-Đây là một dự án MICROservices bao gồm các service sau:
-- **API GATEWAY**
-- **PRODUCT SERVICE**
-- **INVENTORY SERVICE**
-- **ORDER SERVICE**
-- **IDENTITY SERVICE**
-- **NOTIFICATION SERVICE**
+This repository is a microservice reference example that is intended to teach the basics of event sourcing in Spring Boot applications.
 
-## YÊU CẦU HỆ THỐNG
+## System Architecture
 
-- **JAVA 21**
-- **DOCKER**
-- **DOCKER COMPOSE**
-- **MAVEN**
+For this reference, I chose to create a simple example domain with a high degree of relationships between data stored on separate microservices. In the architecture diagram below, you'll see an abstract component diagram that describes an event-driven microservice architecture containing two domain services and one aggregate processor.
 
-## HƯỚNG DẪN CÀI ĐẶT VÀ CHẠY
+![Event sourcing architecture diagram](https://imgur.com/hikqWCr.png)
 
-1. **CLONE REPOSITORY VỀ MÁY LOCAL:**
+## Conventions
 
-   ```bash
-   git clone <repository_url>
-   cd <project_folder>
-   ```
+One of the main problems I see today when describing components of a microservice architecture is a general ambiguity in the roles of separate services. For this reason, this example will describe a set of conventions for the roles of separate services.
 
-2. **CHẠY DOCKER COMPOSE ĐỂ KHỞI ĐỘNG CÁC CONTAINER CẦN THIẾT:**
+### Domain Services
 
-   ```bash
-   docker-compose up -d
-   ```
+**Domain services** are microservices that own the _system of record_ for a portion of the application's domain.
 
-3. **CHẠY TỪNG SERVICE:**
+![Domain service](https://imgur.com/Lgy55OJ.png)
 
-   Đối với mỗi service (api-gateway, product-service, inventory-service, order-service, identity-service, notification-service), thực hiện các bước sau:
+Domain services:
 
-   ```bash
-   cd <service_folder>
-   mvn spring-boot:run
-   ```
+- Manage the storage of domain data that it owns.
+- Produce the API contract for the domain data that it owns.
+- Produce events when the state of any domain data changes.
+- Maintain relationship integrity to domain data owned by other services.
 
-4. **TRUY CẬP API GATEWAY:**
+### Aggregate Services
 
-   API Gateway sẽ chạy tại `http://localhost:9000` (hoặc port được cấu hình).
+**Aggregate services** are microservices that replicate eventually consistent views of domain data owned by separate _domain services_.
 
-## CẤU TRÚC PROJECT
+![Aggregate service](https://imgur.com/1jx6rTn.png)
 
-- `api-gateway`: **API GATEWAY SERVICE**
-- `product-service`: **QUẢN LÝ SẢN PHẨM**
-- `inventory-service`: **QUẢN LÝ KHO HÀNG**
-- `order-service`: **QUẢN LÝ ĐƠN HÀNG**
-- `identity-service`: **XÁC THỰC VÀ PHÂN QUYỀN**
-- `notification-service`: **GỬI THÔNG BÁO**
+Aggregate services:
 
-## MONITORING
+- Subscribe to domain events emitted by separate domain services.
+- Maintain an ordered immutable event log for events it receives.
+- Create connected query projections of distributed domain data.
+- Provide performant read-access to complex views of domain data.
 
-Dự án sử dụng **GRAFANA**, **PROMETHEUS**, và **LOKI** cho việc giám sát. Truy cập Grafana tại `http://localhost:3000`.
+## Example Domain
 
-## FRONTEND
+The example domain is a social network of users who can establish friend relationships with one another. I chose this domain because it has high join complexity when the domain data is split across separate services.
 
-Frontend được phát triển bằng **REACT**. Để chạy frontend:
-``` bash
-cd frontend
-npm install
-npm start
-```
-Truy cập frontend tại `http://localhost:3500`
+![Domain graph of users and friends](https://imgur.com/Uqd7SHE.png)
+
+The diagram above is a domain graph that shows `User` nodes and `Friend` relationships. In a microservice architecture we may decide to decompose this domain graph into two separate domain services, a `user-service` and a `friend-service`. For this reason, we'll have foreign-key relationships stored in the `friend-service` that reference the unique identity of a `User` stored on the `user-service`. 
+
+# License
+
+This project is licensed under Apache License 2.0.
