@@ -91,10 +91,10 @@ pipeline {
                         serverUrl: KUBE_SERVER_URL
                     ]) {
                         sh '''
-                            kubectl apply -k k8s/base --validate=false
-                            kubectl apply -k k8s/base/services/aggregate-service --validate=false
-                            kubectl apply -k k8s/base/services/friend-service --validate=false
-                            kubectl apply -k k8s/base/services/user-service --validate=false
+                            kubectl apply -k k8s/base 
+                            kubectl apply -k k8s/base/services/aggregate-service 
+                            kubectl apply -k k8s/base/services/friend-service 
+                            kubectl apply -k k8s/base/services/user-service 
                         '''
                     }
                 }
