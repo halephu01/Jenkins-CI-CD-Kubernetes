@@ -74,7 +74,7 @@ pipeline {
                                     ${scannerHome}/bin/sonar-scanner \
                                     -Dsonar.projectKey=${service} \
                                     -Dsonar.projectName=${service} \
-                                    -Dsonar.sources=. \
+                                    -Dsonar.sources=11 \
                                     -Dsonar.java.binaries=target/classes 
                                 """
                             }
