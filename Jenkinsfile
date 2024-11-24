@@ -39,7 +39,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def scannerHome = tool 'SonarScanner'
+                    def scannerHome = tool 'sonar'
                     def services = ['user-service', 'friend-service', 'aggregate-service']
 
                     withSonarQubeEnv('sonar') {
