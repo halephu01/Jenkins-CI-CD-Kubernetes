@@ -116,7 +116,6 @@ pipeline {
                         serverUrl: '192.168.58.2:8443',
                         contextName: 'minikube',
                         clusterName: 'minikube',
-                        namespace: 'default'
                     ]) {
                         sh 'kubectl apply -k k8s/base'
                     }
