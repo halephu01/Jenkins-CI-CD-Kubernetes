@@ -27,7 +27,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/halephu01/Jenkins-CI-CD.git',
+                    url: 'https://github.com/halephu01/Jenkins-CI-CD-Kubernetes.git',
                     credentialsId: 'github-credentials'
             }
         }    
@@ -99,7 +99,7 @@ pipeline {
                     withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
                         sh """
 
-                            minikube start --force
+                            minikube start
 
                             kubectl apply -k k8s/base
                             
