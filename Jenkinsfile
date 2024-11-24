@@ -113,7 +113,7 @@ pipeline {
                 script {
                     withKubeConfig([
                         credentialsId: 'minikube', 
-                        serverUrl: '192.168.58.2:8443',
+                        serverUrl: 'https://127.0.0.1:52014',
                         contextName: 'minikube',
                         clusterName: 'minikube',
                     ]) {
