@@ -13,9 +13,6 @@ pipeline {
 
         VERSION = "${BUILD_NUMBER}"
         SONAR_TOKEN = credentials('sonar')
-        SONAR_PROJECT_KEY = 'microservices-project'
-
-        
     }
 
 
@@ -39,7 +36,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def scannerHome = tool 'SonarScanner'
+                    def scannerHome = tool 'sonar'
                     def services = ['user-service', 'friend-service', 'aggregate-service']
 
                     withSonarQubeEnv('sonar') {
