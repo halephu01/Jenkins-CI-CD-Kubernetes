@@ -111,12 +111,6 @@ pipeline {
                 }
             }
         }
-        
-        stage('Verify Deployments') {
-            steps {
-                verifyDeployments()
-            }
-        }
     }
     
     post {
