@@ -98,11 +98,11 @@ pipeline {
                 script {
                     withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
                         sh """
-
-                            minikube start
-
-                            kubectl apply -k k8s/base
+                            # Kiểm tra minikube status
+                            minikube status || minikube start
                             
+                            # Deploy các services
+                            kubectl apply -k k8s/base
                             kubectl apply -k k8s/base/services/aggregate-service
                             kubectl apply -k k8s/base/services/friend-service
                             kubectl apply -k k8s/base/services/user-service                           
