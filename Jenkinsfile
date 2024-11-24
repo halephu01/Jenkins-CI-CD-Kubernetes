@@ -8,13 +8,16 @@ pipeline {
 
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
-        KUBE_SERVER_URL = 'https://192.168.49.2:51792'
+        KUBE_SERVER_URL = sh(script: 'minikube ip', returnStdout: true).trim()
         SONAR_PROJECT_BASE_DIR = '.'
 
         VERSION = "${BUILD_NUMBER}"
         SONAR_TOKEN = credentials('scan')
         SONAR_PROJECT_KEY = 'microservices-project'
 
+        KUBE_SERVER_URL = 'https://192.168.58.2:8443'
+
+        KUBE_CONFIG_ID = 'minikube'
     }
     
     agent any
@@ -96,10 +99,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
+                    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME) {
                         sh """
-                            # Kiểm tra minikube status
-                            minikube status || minikube start
+                            # Kiểm tra kết nối
+                            kubectl get nodes
                             
                             # Deploy các services
                             kubectl apply -k k8s/base
@@ -134,7 +137,7 @@ pipeline {
 
 // Helper functions
 def verifyDeployments() {
-    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
+    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME) {
         sh '''
             echo "Services Status:"
             kubectl get svc -n microservices
