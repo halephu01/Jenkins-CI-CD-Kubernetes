@@ -50,13 +50,31 @@ pipeline {
             }
         }
         
-        stage('Build and Push Docker Image') {
+        stage('Build and Push Docker Images') {
             steps {
                 script {
-                    docker.withRegistry("", DOCKER_CREDENTIALS_ID) {
-                        def serviceImage = docker.build("${DOCKER_REGISTRY}/spring-boot-app:${BUILD_TAG}")
-                        serviceImage.push()
-                        serviceImage.push('latest')
+                    // Định nghĩa services
+                    def services = ['user-service', 'friend-service', 'aggregate-service']
+                    
+                    services.each { service ->
+                        echo "Building ${service} Docker image..."
+                        try {
+                            // Build với tên image chuẩn
+                            sh """
+                                docker build -t ${service} -f ${service}/Dockerfile .
+                            """
+                            
+                            // Tag image với version
+                            sh """
+                                docker tag ${service} halephu01/${service}:${BUILD_NUMBER}
+                                docker tag ${service} halephu01/${service}:latest
+                            """
+                            
+                            echo "Successfully built ${service} image"
+                        } catch (Exception e) {
+                            echo "Error building ${service}: ${e.message}"
+                            throw e
+                        }
                     }
                 }
             }
@@ -69,8 +87,8 @@ pipeline {
                         sh """
                             kubectl apply -k k8s/base
                             
-                            kubectl delete -k k8s/base/services/aggregate-service
-                            kubectl delete -k k8s/base/services/friend-service
+                            kubectl apply -k k8s/base/services/aggregate-service
+                            kubectl apply -k k8s/base/services/friend-service
                             kubectl apply -k k8s/base/services/user-service                           
                         """
                     }
