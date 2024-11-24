@@ -5,25 +5,21 @@ pipeline {
         USER_SERVICE_IMAGE = 'halephu01/user-service'
         FRIEND_SERVICE_IMAGE = 'halephu01/friend-service'
         AGGREGATE_SERVICE_IMAGE = 'halephu01/aggregate-service'
-
+    
+        KUBE_CONFIG_ID = 'minikube'
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
         KUBE_SERVER_URL = 'https://192.168.58.2:8443'
-        SONAR_PROJECT_BASE_DIR = '.'
 
         VERSION = "${BUILD_NUMBER}"
-        SONAR_TOKEN = credentials('scan')
+        //SONAR_TOKEN = credentials('scan')
         SONAR_PROJECT_KEY = 'microservices-project'
 
-        KUBE_CONFIG_ID = 'minikube'
+        
     }
 
-    
+
     agent any
-    
-    options {
-        skipDefaultCheckout()
-    }
     
     stages {
         stage('Clean Workspace') {
@@ -104,11 +100,8 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                        withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {                        sh """
-                            # Kiểm tra kết nối
-                            kubectl get nodes
-                            
-                            # Deploy các services
+                        withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {                        
+                            sh """
                             kubectl apply -k k8s/base
                             kubectl apply -k k8s/base/services/aggregate-service
                             kubectl apply -k k8s/base/services/friend-service
