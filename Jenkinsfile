@@ -90,30 +90,6 @@ pipeline {
             }
         }
         
-        stage('Build and Push Docker Images') {
-            steps {
-                script {
-                    def services = ['user-service', 'friend-service', 'aggregate-service']
-                    
-                    services.each { service ->
-                        echo "Building ${service} Docker image..."
-                        try {
-                            sh """
-                                docker build -t ${service} -f ${service}/Dockerfile .
-                        
-                                docker tag ${service} halephu01/${service}:latest
-                            """
-                            
-                            echo "Successfully built ${service} image"
-                        } catch (Exception e) {
-                            echo "Error building ${service}: ${e.message}"
-                            throw e
-                        }
-                    }
-                }
-            }
-        }
-        
         stage('Deploy to Kubernetes') {
             steps {
                 script {
