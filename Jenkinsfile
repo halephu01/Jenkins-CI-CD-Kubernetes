@@ -1,6 +1,6 @@
 pipeline {
     environment {
-        DOCKER_REGISTRY = "tuilakhanh"
+        DOCKER_REGISTRY = "halephu01"
         BUILD_TAG = "v${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
         DOCKER_CREDENTIALS_ID = 'dockercerd'
         KUBE_CONFIG_ID = 'k8s-config'
@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    withSonarQubeEnv('sq1') {
+                    withSonarQubeEnv('sonar') {
                         sh """
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=${env.JOB_NAME} \
@@ -76,9 +76,9 @@ pipeline {
                         sh """
                             kubectl apply -k k8s/base
                             
-                            kubectl set image deployment/spring-boot-app spring-boot-app=${DOCKER_REGISTRY}/spring-boot-app:${BUILD_TAG}
-                            
-                            kubectl rollout status deployment/spring-boot-app
+                            kubectl delete -k k8s/base/services/aggregate-service
+                            kubectl delete -k k8s/base/services/friend-service
+                            kubectl apply -k k8s/base/services/user-service                           
                         """
                     }
                 }
