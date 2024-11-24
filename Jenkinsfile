@@ -99,7 +99,7 @@ pipeline {
                     withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
                         sh """
 
-                            minikube start
+                            minikube start --force
 
                             kubectl apply -k k8s/base
                             
