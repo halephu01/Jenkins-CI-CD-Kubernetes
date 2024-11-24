@@ -17,12 +17,9 @@ pipeline {
 
         KUBE_CONFIG_ID = 'minikube'
     }
+
     
-    agent {
-        node {
-            label 'any'
-        }
-    }
+    agent any
     
     options {
         skipDefaultCheckout()
