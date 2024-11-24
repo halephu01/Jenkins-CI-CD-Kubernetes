@@ -109,11 +109,5 @@ pipeline {
         failure {
             echo "Pipeline failed!"
         }
-        always {
-            node {
-                cleanWs()
-                echo currentBuild.result == 'FAILURE' ? 'Pipeline failed!' : 'Pipeline completed successfully!'
-            }
-        }
     }
 }
