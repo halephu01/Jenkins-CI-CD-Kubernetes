@@ -86,10 +86,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig([
-                        credentialsId: KUBE_CONFIG_ID,
-                        serverUrl: KUBE_SERVER_URL
-                    ]) {
+                     withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {
                         sh '''
                             kubectl apply -k k8s/base 
                             kubectl apply -k k8s/base/services/aggregate-service 
