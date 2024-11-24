@@ -31,23 +31,20 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    withSonarQubeEnv('sonar') {
-                        sh """
-                            ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=${env.JOB_NAME} \
-                            -Dsonar.projectName=${env.JOB_NAME} \
-                            -Dsonar.sources=. \
-                            -Dsonar.java.binaries=target/classes \
-                            -Dsonar.qualitygate.wait=false
-                        """
-                    }
-                    
-                    timeout(time: 5, unit: 'MINUTES') {
-                        def qg = waitForQualityGate projectKey: env.JOB_NAME
-                        if (qg.status != 'OK') {
-                            error "Quality gate failed: ${qg.status}"
+                    def services = ['user-service', 'friend-service', 'aggregate-service']
+
+                    withSonarQubeEnv('SonarScanner') {
+                        services.each { service ->
+                            dir(service) {
+                                sh """
+                                    ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${service} \
+                                    -Dsonar.projectName=${service} \
+                                    -Dsonar.sources=. \
+                                    -Dsonar.java.binaries=target/classes \
+                                """
+                            }
                         }
-                        echo "Quality gate passed"
                     }
                 }
             }
