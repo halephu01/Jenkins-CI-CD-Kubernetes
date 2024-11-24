@@ -12,7 +12,7 @@ pipeline {
         KUBE_SERVER_URL = 'https://192.168.58.2:8443'
 
         VERSION = "${BUILD_NUMBER}"
-        //SONAR_TOKEN = credentials('scan')
+        SONAR_TOKEN = credentials('scan')
         SONAR_PROJECT_KEY = 'microservices-project'
 
         
