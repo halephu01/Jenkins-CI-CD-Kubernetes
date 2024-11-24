@@ -9,7 +9,7 @@ pipeline {
         KUBE_CONFIG_ID = 'minikube'
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
-        KUBE_SERVER_URL = 'https://127.0.0.1:52014'
+        KUBE_SERVER_URL = 'https:/192.168.58.2:8443'
 
         VERSION = "${BUILD_NUMBER}"
         SONAR_TOKEN = credentials('sonar')
@@ -113,7 +113,7 @@ pipeline {
                 script {
                     withKubeConfig([
                         credentialsId: 'minikube', 
-                        serverUrl: 'https://127.0.0.1:52014',
+                        serverUrl: 'https://192.168.58.2:8443',
                         contextName: 'minikube',
                         clusterName: 'minikube',
                     ]) {
