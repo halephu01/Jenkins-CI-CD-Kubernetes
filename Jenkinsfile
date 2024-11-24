@@ -1,14 +1,20 @@
 pipeline {
     environment {
-        DOCKER_REGISTRY = "halephu01"
-        BUILD_TAG = "v${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
-        DOCKER_CREDENTIALS_ID = 'dockercerd'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+         
+        USER_SERVICE_IMAGE = 'halephu01/user-service'
+        FRIEND_SERVICE_IMAGE = 'halephu01/friend-service'
+        AGGREGATE_SERVICE_IMAGE = 'halephu01/aggregate-service'
+
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
-        KUBE_SERVER_URL = 'https://192.168.49.2:8443'
-        REPORT_DIR = 'reports'
+        KUBE_SERVER_URL = 'https://192.168.49.2:51792'
         SONAR_PROJECT_BASE_DIR = '.'
-        SONAR_SCANNER_OPTS = '-Xmx2048m'
+
+        VERSION = "${BUILD_NUMBER}"
+        SONAR_TOKEN = credentials('scan')
+        SONAR_PROJECT_KEY = 'microservices-project'
+
     }
     
     agent any
@@ -21,17 +27,18 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/halephu01/Jenkins-CI-CD.git'
+                    url: 'https://github.com/halephu01/Jenkins-CI-CD.git',
+                    credentialsId: 'github-credentials'
             }
         }    
 
-        stage('Build') {
-            steps {
-                script {
-                    sh 'mvn clean package -DskipTests'
-                }
-            }
-        }
+        // stage('Build') {
+        //     steps {
+        //         script {
+        //             sh 'mvn clean package -DskipTests'
+        //         }
+        //     }
+        // }
         
         // stage('SonarQube Analysis') {
         //     steps {
@@ -94,7 +101,7 @@ pipeline {
 
                             sh 'ls -la'
                             sh 'pwd'
-                            
+
                             kubectl apply -k k8s/base
                             
                             kubectl apply -k k8s/base/services/aggregate-service
