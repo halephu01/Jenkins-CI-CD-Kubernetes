@@ -22,6 +22,12 @@ pipeline {
     agent any
     
     stages {    
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -104,7 +110,10 @@ pipeline {
             echo "Pipeline failed!"
         }
         always {
-            cleanWs()
+            node('any') {
+                cleanWs()
+                echo currentBuild.result == 'FAILURE' ? 'Pipeline failed!' : 'Pipeline completed successfully!'
+            }
         }
     }
 }
