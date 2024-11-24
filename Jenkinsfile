@@ -9,7 +9,7 @@ pipeline {
         KUBE_CONFIG_ID = 'minikube'
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
-        KUBE_SERVER_URL = 'https://192.168.58.2:8443'
+        KUBE_SERVER_URL = 'https://127.0.0.1:52014'
 
         VERSION = "${BUILD_NUMBER}"
         SONAR_TOKEN = credentials('sonar')
