@@ -32,7 +32,35 @@ pipeline {
                     credentialsId: 'github-credentials'
             }
         }    
-        
+
+        stage('Build Services') {
+            parallel {
+                stage('Build User Service') {
+                    steps {
+                        dir('user-service') {
+                            sh 'mvn clean package -DskipTests'
+                        }
+                    }
+                }
+                
+                stage('Build Friend Service') {
+                    steps {
+                        dir('friend-service') {
+                            sh 'mvn clean package -DskipTests'
+                        }
+                    }
+                }
+                
+                stage('Build Aggregate Service') {
+                    steps {
+                        dir('aggregate-service') {
+                            sh 'mvn clean package -DskipTests'
+                        }
+                    }
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 script {
