@@ -35,67 +35,53 @@ pipeline {
                     credentialsId: 'github-credentials'
             }
         }    
-
-        // stage('Build') {
-        //     steps {
-        //         script {
-        //             sh 'mvn clean package -DskipTests'
-        //         }
-        //     }
-        // }
         
-        // stage('SonarQube Analysis') {
-        //     steps {
-        //         script {
-        //             def scannerHome = tool 'SonarScanner'
-        //             def services = ['user-service', 'friend-service', 'aggregate-service']
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner'
+                    def services = ['user-service', 'friend-service', 'aggregate-service']
 
-        //             withSonarQubeEnv('sonar') {
-        //                 services.each { service ->
-        //                     dir(service) {
-        //                         sh """
-        //                             ${scannerHome}/bin/sonar-scanner \
-        //                             -Dsonar.projectKey=${service} \
-        //                             -Dsonar.projectName=${service} \
-        //                             -Dsonar.sources=. \
-        //                             -Dsonar.java.binaries=target/classes \
-        //                         """
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                    withSonarQubeEnv('sonar') {
+                        services.each { service ->
+                            dir(service) {
+                                sh """
+                                    ${scannerHome}/bin/sonar-scanner \
+                                    -Dsonar.projectKey=${service} \
+                                    -Dsonar.projectName=${service} \
+                                    -Dsonar.sources=. \
+                                    -Dsonar.java.binaries=target/classes \
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
         
-        // stage('Build and Push Docker Images') {
-        //     steps {
-        //         script {
-        //             // Định nghĩa services
-        //             def services = ['user-service', 'friend-service', 'aggregate-service']
+        stage('Build and Push Docker Images') {
+            steps {
+                script {
+                    def services = ['user-service', 'friend-service', 'aggregate-service']
                     
-        //             services.each { service ->
-        //                 echo "Building ${service} Docker image..."
-        //                 try {
-        //                     // Build với tên image chuẩn
-        //                     sh """
-        //                         docker build -t ${service} -f ${service}/Dockerfile .
-        //                     """
+                    services.each { service ->
+                        echo "Building ${service} Docker image..."
+                        try {
+                            sh """
+                                docker build -t ${service} -f ${service}/Dockerfile .
+                        
+                                docker tag ${service} halephu01/${service}:latest
+                            """
                             
-        //                     // Tag image với version
-        //                     sh """
-        //                         docker tag ${service} halephu01/${service}:${BUILD_NUMBER}
-        //                         docker tag ${service} halephu01/${service}:latest
-        //                     """
-                            
-        //                     echo "Successfully built ${service} image"
-        //                 } catch (Exception e) {
-        //                     echo "Error building ${service}: ${e.message}"
-        //                     throw e
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                            echo "Successfully built ${service} image"
+                        } catch (Exception e) {
+                            echo "Error building ${service}: ${e.message}"
+                            throw e
+                        }
+                    }
+                }
+            }
+        }
         
         stage('Deploy to Kubernetes') {
             steps {
