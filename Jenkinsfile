@@ -112,13 +112,13 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([
-                        credentialsId: 'minikube',  // ID của Kubernetes credentials trong Jenkins
-                        serverUrl: '192.168.58.2:8443',  // URL của Minikube server
+                        credentialsId: 'minikube', 
+                        serverUrl: '192.168.58.2:8443',
                         contextName: 'minikube',
                         clusterName: 'minikube',
                         namespace: 'default'
                     ]) {
-                        sh 'kubectl apply -k k8s/base --validate=false'
+                        sh 'kubectl apply -k k8s/base'
                     }
                 }
             }
