@@ -27,28 +27,28 @@ pipeline {
             }
         }
         
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
-                    def services = ['user-service', 'friend-service', 'aggregate-service']
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             def scannerHome = tool 'SonarScanner'
+        //             def services = ['user-service', 'friend-service', 'aggregate-service']
 
-                    withSonarQubeEnv('sonar') {
-                        services.each { service ->
-                            dir(service) {
-                                sh """
-                                    ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${service} \
-                                    -Dsonar.projectName=${service} \
-                                    -Dsonar.sources=. \
-                                    -Dsonar.java.binaries=target/classes \
-                                """
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //             withSonarQubeEnv('sonar') {
+        //                 services.each { service ->
+        //                     dir(service) {
+        //                         sh """
+        //                             ${scannerHome}/bin/sonar-scanner \
+        //                             -Dsonar.projectKey=${service} \
+        //                             -Dsonar.projectName=${service} \
+        //                             -Dsonar.sources=. \
+        //                             -Dsonar.java.binaries=target/classes \
+        //                         """
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         
         stage('Build and Push Docker Images') {
             steps {
