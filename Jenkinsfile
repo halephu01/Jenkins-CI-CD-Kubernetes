@@ -33,80 +33,80 @@ pipeline {
             }
         }    
 
-        stage('Build Services') {
-            parallel {
-                stage('Build User Service') {
-                    steps {
-                        dir('user-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
+        // stage('Build Services') {
+        //     parallel {
+        //         stage('Build User Service') {
+        //             steps {
+        //                 dir('user-service') {
+        //                     sh 'mvn clean package -DskipTests'
+        //                 }
+        //             }
+        //         }
                 
-                stage('Build Friend Service') {
-                    steps {
-                        dir('friend-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
+        //         stage('Build Friend Service') {
+        //             steps {
+        //                 dir('friend-service') {
+        //                     sh 'mvn clean package -DskipTests'
+        //                 }
+        //             }
+        //         }
                 
-                stage('Build Aggregate Service') {
-                    steps {
-                        dir('aggregate-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'sonar'
-                    def services = ['user-service', 'friend-service', 'aggregate-service']
-
-                    withSonarQubeEnv('sonar') {
-                        services.each { service ->
-                            dir(service) {
-                                sh """
-                                    ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${service} \
-                                    -Dsonar.projectName=${service} \
-                                    -Dsonar.sources=. \
-                                    -Dsonar.java.binaries=target/classes \
-                                """
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // stage('Build and Push Docker Images') {
-        //     steps {
-        //         script {
-        //             def services = ['user-service', 'friend-service', 'aggregate-service']
-                    
-        //             services.each { service ->
-        //                 echo "Building ${service} Docker image..."
-        //                 try {
-        //                     sh """
-        //                         docker build -t ${service} -f ${service}/Dockerfile .
-                        
-        //                         docker tag ${service} halephu01/${service}:latest
-        //                     """
-                            
-        //                     echo "Successfully built ${service} image"
-        //                 } catch (Exception e) {
-        //                     echo "Error building ${service}: ${e.message}"
-        //                     throw e
+        //         stage('Build Aggregate Service') {
+        //             steps {
+        //                 dir('aggregate-service') {
+        //                     sh 'mvn clean package -DskipTests'
         //                 }
         //             }
         //         }
         //     }
         // }
+
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             def scannerHome = tool 'sonar'
+        //             def services = ['user-service', 'friend-service', 'aggregate-service']
+
+        //             withSonarQubeEnv('sonar') {
+        //                 services.each { service ->
+        //                     dir(service) {
+        //                         sh """
+        //                             ${scannerHome}/bin/sonar-scanner \
+        //                             -Dsonar.projectKey=${service} \
+        //                             -Dsonar.projectName=${service} \
+        //                             -Dsonar.sources=. \
+        //                             -Dsonar.java.binaries=target/classes \
+        //                         """
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        
+        // // stage('Build and Push Docker Images') {
+        // //     steps {
+        // //         script {
+        // //             def services = ['user-service', 'friend-service', 'aggregate-service']
+                    
+        // //             services.each { service ->
+        // //                 echo "Building ${service} Docker image..."
+        // //                 try {
+        // //                     sh """
+        // //                         docker build -t ${service} -f ${service}/Dockerfile .
+                        
+        // //                         docker tag ${service} halephu01/${service}:latest
+        // //                     """
+                            
+        // //                     echo "Successfully built ${service} image"
+        // //                 } catch (Exception e) {
+        // //                     echo "Error building ${service}: ${e.message}"
+        // //                     throw e
+        // //                 }
+        // //             }
+        // //         }
+        // //     }
+        // // }
         
         stage('Deploy to Kubernetes') {
             steps {
