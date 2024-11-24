@@ -3,7 +3,6 @@ pipeline {
         DOCKER_REGISTRY = "halephu01"
         BUILD_TAG = "v${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
         DOCKER_CREDENTIALS_ID = 'dockercerd'
-        KUBE_CONFIG_ID = 'k8s-config'
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
         KUBE_SERVER_URL = 'https://192.168.49.2:8443'
@@ -83,7 +82,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {
+                    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
                         sh """
                             kubectl apply -k k8s/base
                             
@@ -118,7 +117,7 @@ pipeline {
 
 // Helper functions
 def verifyDeployments() {
-    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {
+    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
         sh '''
             echo "Services Status:"
             kubectl get svc -n microservices
