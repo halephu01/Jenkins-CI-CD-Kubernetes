@@ -16,6 +16,7 @@ pipeline {
     
     tools {
         maven 'Maven 3.8.6'
+        sonar 'SonarScanner 3.0.0.702'
     }
     
     stages {
