@@ -33,62 +33,62 @@ pipeline {
             }
         }    
 
-        stage('Build Services') {
-            parallel {
-                stage('Build User Service') {
-                    steps {
-                        dir('user-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
+        // stage('Build Services') {
+        //     parallel {
+        //         stage('Build User Service') {
+        //             steps {
+        //                 dir('user-service') {
+        //                     sh 'mvn clean package -DskipTests'
+        //                 }
+        //             }
+        //         }
                 
-                stage('Build Friend Service') {
-                    steps {
-                        dir('friend-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
+        //         stage('Build Friend Service') {
+        //             steps {
+        //                 dir('friend-service') {
+        //                     sh 'mvn clean package -DskipTests'
+        //                 }
+        //             }
+        //         }
                 
-                stage('Build Aggregate Service') {
-                    steps {
-                        dir('aggregate-service') {
-                            sh 'mvn clean package -DskipTests'
-                        }
-                    }
-                }
-            }
-        }
+        //         stage('Build Aggregate Service') {
+        //             steps {
+        //                 dir('aggregate-service') {
+        //                     sh 'mvn clean package -DskipTests'
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'sonar'
-                    def services = ['user-service', 'friend-service', 'aggregate-service']
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             def scannerHome = tool 'sonar'
+        //             def services = ['user-service', 'friend-service', 'aggregate-service']
 
-                    withSonarQubeEnv('sonar') {
-                        services.each { service ->
-                            dir(service) {
-                                withEnv(["JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"]) {
-                                    sh """
-                                        ${scannerHome}/bin/sonar-scanner \
-                                        -Dsonar.projectKey=${service} \
-                                        -Dsonar.projectName=${service} \
-                                        -Dsonar.sources=src/main/java \
-                                        -Dsonar.java.binaries=target/classes \
-                                        -Dsonar.java.source=11 \
-                                        -Dsonar.java.jdkHome=/usr/lib/jvm/java-11-openjdk-amd64 \
-                                        -Dsonar.sourceEncoding=UTF-8 \
-                                        -Dsonar.host.url=https://eafc-171-250-164-108.ngrok-free.app
-                                    """
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //             withSonarQubeEnv('sonar') {
+        //                 services.each { service ->
+        //                     dir(service) {
+        //                         withEnv(["JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"]) {
+        //                             sh """
+        //                                 ${scannerHome}/bin/sonar-scanner \
+        //                                 -Dsonar.projectKey=${service} \
+        //                                 -Dsonar.projectName=${service} \
+        //                                 -Dsonar.sources=src/main/java \
+        //                                 -Dsonar.java.binaries=target/classes \
+        //                                 -Dsonar.java.source=11 \
+        //                                 -Dsonar.java.jdkHome=/usr/lib/jvm/java-11-openjdk-amd64 \
+        //                                 -Dsonar.sourceEncoding=UTF-8 \
+        //                                 -Dsonar.host.url=https://eafc-171-250-164-108.ngrok-free.app
+        //                             """
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         
         stage('Deploy to Kubernetes') {
             steps {
