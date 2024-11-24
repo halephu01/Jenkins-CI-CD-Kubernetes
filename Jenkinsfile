@@ -18,13 +18,23 @@ pipeline {
         KUBE_CONFIG_ID = 'minikube'
     }
     
-    agent any
+    agent {
+        node {
+            label 'any'
+        }
+    }
     
-    tools {
-        maven 'maven 3.8.6'
+    options {
+        skipDefaultCheckout()
     }
     
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -120,30 +130,20 @@ pipeline {
     }
     
     post {
-        always {
-            cleanWs() 
-        }
         success {
             echo "Pipeline completed successfully!"
         }
         failure {
             echo "Pipeline failed!"
         }
-    }
-}
-
-// Helper functions
-def verifyDeployments() {
-    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME) {
-        sh '''
-            echo "Services Status:"
-            kubectl get svc -n microservices
-            
-            echo "\nPods Status:"
-            kubectl get pods -n microservices
-            
-            echo "\nDeployments Status:"
-            kubectl get deployments -n microservices
-        '''
+        always {
+            script {
+                try {
+                    cleanWs()
+                } catch (Exception e) {
+                    echo "Warning: Failed to clean workspace: ${e.message}"
+                }
+            }
+        }
     }
 }
