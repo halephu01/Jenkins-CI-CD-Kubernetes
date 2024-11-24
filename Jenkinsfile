@@ -24,7 +24,7 @@ pipeline {
         }
         
         stage('Test') {
-            steps {
+            steps 
                 script {
                     sh 'mvn test clean'
                 }
@@ -74,9 +74,7 @@ pipeline {
                 script {
                     withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {
                         sh """
-                            kubectl apply -f k8s/base/namespace.yml || true
-                            kubectl apply -f k8s/base/config.yaml || true
-                            kubectl apply -f k8s/base/services.yaml || true
+                            kubectl apply -k k8s/base
                             
                             kubectl set image deployment/spring-boot-app spring-boot-app=${DOCKER_REGISTRY}/spring-boot-app:${BUILD_TAG}
                             
