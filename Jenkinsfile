@@ -91,6 +91,10 @@ pipeline {
                 script {
                     withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, serverUrl: KUBE_SERVER_URL) {
                         sh """
+
+                            sh 'ls -la'
+                            sh 'pwd'
+                            
                             kubectl apply -k k8s/base
                             
                             kubectl apply -k k8s/base/services/aggregate-service
