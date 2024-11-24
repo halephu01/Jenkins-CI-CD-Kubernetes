@@ -111,13 +111,14 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                     withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {
-                        sh '''
-                            kubectl apply -k k8s/base 
-                            kubectl apply -k k8s/base/services/aggregate-service 
-                            kubectl apply -k k8s/base/services/friend-service 
-                            kubectl apply -k k8s/base/services/user-service 
-                        '''
+                    withKubeConfig([
+                        credentialsId: 'minikube',  // ID của Kubernetes credentials trong Jenkins
+                        serverUrl: '192.168.58.2:8443',  // URL của Minikube server
+                        contextName: 'minikube',
+                        clusterName: 'minikube',
+                        namespace: 'default'
+                    ]) {
+                        sh 'kubectl apply -k k8s/base --validate=false'
                     }
                 }
             }
