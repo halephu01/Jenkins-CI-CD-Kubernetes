@@ -18,6 +18,13 @@ pipeline {
     }
     
     stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/halephu01/Jenkins-CI-CD.git'
+            }
+        }    
+
         stage('Build') {
             steps {
                 script {
@@ -49,35 +56,35 @@ pipeline {
         //     }
         // }
         
-        stage('Build and Push Docker Images') {
-            steps {
-                script {
-                    // Định nghĩa services
-                    def services = ['user-service', 'friend-service', 'aggregate-service']
+        // stage('Build and Push Docker Images') {
+        //     steps {
+        //         script {
+        //             // Định nghĩa services
+        //             def services = ['user-service', 'friend-service', 'aggregate-service']
                     
-                    services.each { service ->
-                        echo "Building ${service} Docker image..."
-                        try {
-                            // Build với tên image chuẩn
-                            sh """
-                                docker build -t ${service} -f ${service}/Dockerfile .
-                            """
+        //             services.each { service ->
+        //                 echo "Building ${service} Docker image..."
+        //                 try {
+        //                     // Build với tên image chuẩn
+        //                     sh """
+        //                         docker build -t ${service} -f ${service}/Dockerfile .
+        //                     """
                             
-                            // Tag image với version
-                            sh """
-                                docker tag ${service} halephu01/${service}:${BUILD_NUMBER}
-                                docker tag ${service} halephu01/${service}:latest
-                            """
+        //                     // Tag image với version
+        //                     sh """
+        //                         docker tag ${service} halephu01/${service}:${BUILD_NUMBER}
+        //                         docker tag ${service} halephu01/${service}:latest
+        //                     """
                             
-                            echo "Successfully built ${service} image"
-                        } catch (Exception e) {
-                            echo "Error building ${service}: ${e.message}"
-                            throw e
-                        }
-                    }
-                }
-            }
-        }
+        //                     echo "Successfully built ${service} image"
+        //                 } catch (Exception e) {
+        //                     echo "Error building ${service}: ${e.message}"
+        //                     throw e
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         
         stage('Deploy to Kubernetes') {
             steps {
