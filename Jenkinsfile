@@ -8,7 +8,6 @@ pipeline {
 
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
-        KUBE_SERVER_URL = sh(script: 'minikube ip', returnStdout: true).trim()
         SONAR_PROJECT_BASE_DIR = '.'
 
         VERSION = "${BUILD_NUMBER}"
@@ -23,7 +22,7 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven 3.8.6'
+        maven 'maven 3.8.6'
     }
     
     stages {
@@ -99,8 +98,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME) {
-                        sh """
+                        withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {                        sh """
                             # Kiểm tra kết nối
                             kubectl get nodes
                             
