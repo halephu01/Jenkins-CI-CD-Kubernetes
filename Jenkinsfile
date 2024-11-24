@@ -70,13 +70,19 @@ pipeline {
                     withSonarQubeEnv('sonar') {
                         services.each { service ->
                             dir(service) {
-                                sh """
-                                    ${scannerHome}/bin/sonar-scanner \
-                                    -Dsonar.projectKey=${service} \
-                                    -Dsonar.projectName=${service} \
-                                    -Dsonar.sources=11 \
-                                    -Dsonar.java.binaries=target/classes 
-                                """
+                                withEnv(["JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"]) {
+                                    sh """
+                                        ${scannerHome}/bin/sonar-scanner \
+                                        -Dsonar.projectKey=${service} \
+                                        -Dsonar.projectName=${service} \
+                                        -Dsonar.sources=src/main/java \
+                                        -Dsonar.java.binaries=target/classes \
+                                        -Dsonar.java.source=11 \
+                                        -Dsonar.java.jdkHome=/usr/lib/jvm/java-11-openjdk-amd64 \
+                                        -Dsonar.sourceEncoding=UTF-8 \
+                                        -Dsonar.host.url=https://eafc-171-250-164-108.ngrok-free.app
+                                    """
+                                }
                             }
                         }
                     }
