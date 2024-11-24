@@ -8,13 +8,12 @@ pipeline {
 
         KUBE_CLUSTER_NAME = 'minikube'
         KUBE_CONTEXT_NAME = 'minikube'
+        KUBE_SERVER_URL = 'https://192.168.58.2:8443'
         SONAR_PROJECT_BASE_DIR = '.'
 
         VERSION = "${BUILD_NUMBER}"
         SONAR_TOKEN = credentials('scan')
         SONAR_PROJECT_KEY = 'microservices-project'
-
-        KUBE_SERVER_URL = 'https://192.168.58.2:8443'
 
         KUBE_CONFIG_ID = 'minikube'
     }
@@ -122,7 +121,7 @@ pipeline {
     
     post {
         always {
-            cleanWs()
+            cleanWs() 
         }
         success {
             echo "Pipeline completed successfully!"
