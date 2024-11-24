@@ -21,13 +21,7 @@ pipeline {
 
     agent any
     
-    stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-        
+    stages {    
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -86,13 +80,16 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                        withKubeConfig(clusterName: KUBE_CLUSTER_NAME, contextName: KUBE_CONTEXT_NAME, credentialsId: KUBE_CONFIG_ID, serverUrl: KUBE_SERVER_URL) {                        
-                            sh """
-                            kubectl apply -k k8s/base
-                            kubectl apply -k k8s/base/services/aggregate-service
-                            kubectl apply -k k8s/base/services/friend-service
-                            kubectl apply -k k8s/base/services/user-service                           
-                        """
+                    withKubeConfig([
+                        credentialsId: KUBE_CONFIG_ID,
+                        serverUrl: KUBE_SERVER_URL
+                    ]) {
+                        sh '''
+                            kubectl apply -k k8s/base --validate=false
+                            kubectl apply -k k8s/base/services/aggregate-service --validate=false
+                            kubectl apply -k k8s/base/services/friend-service --validate=false
+                            kubectl apply -k k8s/base/services/user-service --validate=false
+                        '''
                     }
                 }
             }
@@ -107,13 +104,7 @@ pipeline {
             echo "Pipeline failed!"
         }
         always {
-            script {
-                try {
-                    cleanWs()
-                } catch (Exception e) {
-                    echo "Warning: Failed to clean workspace: ${e.message}"
-                }
-            }
+            cleanWs()
         }
     }
 }
